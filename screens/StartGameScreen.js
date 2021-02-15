@@ -1,15 +1,32 @@
-import React, {useState} from "react"
-import {View, StyleSheet, Text, TextInput, Button} from "react-native"
+import React, {useState, useEffect} from "react"
+
+import {View, StyleSheet, Text, Button, Dimensions} from "react-native"
 import Card from "../components/Card";
 import Colors from "../constants/Colors.js"
 import Input from "../components/Input.js"
-import {TouchableWithoutFeedback, Keyboard, Alert} from "react-native";
+import {TouchableWithoutFeedback, TouchableNativeFeedback, Keyboard, Alert, KeyboardAvoidingView, ScrollView} from "react-native";
 import NumberContainer from "../components/NumberContainer";
+import CustomButton from "../components/CustomButton";
 
 const StartGameScreen = props => {
     const [enteredValue, setEnteredValue] = useState("")
     const [confirmed, setConfirmed] = useState(false)
     const [selectedNumber, setSelectedNumber] = useState()
+
+    const [buttonWidth, setButtonWidth] = useState(Dimensions.get("window").width / 4)
+
+    useEffect(() => { // This will run on every re-render
+        const updateLayout = () => {
+            setButtonWidth(Dimensions.get("window").width / 4)
+        }
+
+        Dimensions.addEventListener("change", updateLayout)
+
+        // Clean up the listener
+        return () => {
+            Dimensions.removeEventListener("change", updateLayout)
+        }
+    })
 
     const numberInputHandler = (inputText) => {
         setEnteredValue(inputText.replace(/[ˆ0-9]/g), "")
@@ -54,46 +71,60 @@ const StartGameScreen = props => {
                 <NumberContainer>
                     {selectedNumber}
                 </NumberContainer>
-                <Button
-                    title="START GAME"
+                <CustomButton
+                    text="START GAME"
                     onPress={() => props.onStartGameHandler(selectedNumber)}/>
             </Card>
     }
 
+    let ButtonComponent = TouchableWithoutFeedback // The constant needs to start with capital letter
+
+    if (Platform.OS === "android" && Platform.Version >= 21) {
+        ButtonComponent = TouchableNativeFeedback
+    }
+
     return (
-        <TouchableWithoutFeedback onPress={() => {
-            // Dismiss the keyboard
-            Keyboard.dismiss()
-        }}>
-            <View style={Styles.container}>
-                <Text style={Styles.title}
-                      title="Start a new game"/>
-                <Card style={Styles.inputContainer}>
-                    <Text style={Styles.title}
-                          title="Select a number"/>
-                    <Input
-                        style={Styles.input}
-                        keyboardType="number-pad" // This works only for iOS
-                        maxLength={2}
-                        onChangedText={numberInputHandler}/>
-                    <View style={Styles.buttonContainer}>
-                        <View>
-                            <Button
-                                title="Reset"
-                                onPress={resetInputHandler}
-                                color={Colors.accentColor}/>
-                        </View>
-                        <View>
-                            <Button
-                                title="Confirm"
-                                onPress={confirmInputHandler}
-                                color={Colors.accentColor}/>
-                        </View>
+        <ScrollView>
+            <KeyboardAvoidingView
+                behaviour="position"
+                keyboardVerticalOffset={30}>
+                <ButtonComponent onPress={() => {
+                    // Dismiss the keyboard
+                    Keyboard.dismiss()
+                }}>
+                    <View style={Styles.container}>
+                        <Text style={Styles.title}
+                              title="Start a new game"/>
+                        <Card style={Styles.inputContainer}>
+                            <Text style={Styles.title}
+                                  title="Select a number"/>
+                            <Input
+                                style={Styles.input}
+                                keyboardType="number-pad" // This works only for iOS
+                                maxLength={2}
+                                onChangedText={numberInputHandler}/>
+                            <View style={Styles.buttonContainer}>
+                                <View>
+                                    <Button
+                                        style={{width: buttonWidth}}
+                                        title="Reset"
+                                        onPress={resetInputHandler}
+                                        color={Colors.accentColor}/>
+                                </View>
+                                <View>
+                                    <Button
+                                        style={{width: buttonWidth}}
+                                        title="Confirm"
+                                        onPress={confirmInputHandler}
+                                        color={Colors.accentColor}/>
+                                </View>
+                            </View>
+                        </Card>
+                        {confirmedOutput}
                     </View>
-                </Card>
-                {confirmedOutput}
-            </View>
-        </TouchableWithoutFeedback>
+                </ButtonComponent>
+            </KeyboardAvoidingView>
+        </ScrollView>
     )
 }
 
@@ -108,8 +139,9 @@ const Styles = StyleSheet.create({
         marginVertical: 10
     },
     inputContainer: {
-        width: 300,
-        maxWidth: "80%",
+        width: "80%",
+        minWidth: 300, // This will set always the min width
+        maxWidth: "95%",
         alignItems: "center"
     },
     buttonContainer: {

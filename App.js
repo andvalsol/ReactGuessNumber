@@ -1,7 +1,6 @@
 import React, {useState} from 'react';
-import {StyleSheet} from 'react-native';
+import {StyleSheet, View, SafeAreaView} from 'react-native';
 import Header from "./components/Header";
-import {View} from "react-native-web";
 import StartGameScreen from "./screens/StartGameScreen";
 import GameScreen from "./screens/GameScreen";
 import GameOverScreen from "./screens/GameOverScreen";
@@ -59,12 +58,14 @@ export default function App() {
     }
 
     return (
-        <View>
-            <Header
-                style={Styles.container}
-                title={"Guess a number"}/>
-            {content}
-        </View>
+        <SafeAreaView>
+            <View>
+                <Header
+                    style={Styles.container}
+                    title={"Guess a number"}/>
+                {content}
+            </View>
+        </SafeAreaView>
     )
 }
 
